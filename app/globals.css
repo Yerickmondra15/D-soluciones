@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.water-hover-section {
+  --x: 50%;
+  --y: 78%;
+  --shine-opacity: 0.22;
+  --wave-speed: 20s;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(8, 145, 178, 0.98), rgba(6, 182, 212, 0.96) 48%, rgba(4, 47, 73, 0.98));
+}
+
+.water-hover-section::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -2;
+  opacity: var(--shine-opacity);
+  transition: opacity 260ms ease;
+  background:
+    radial-gradient(circle at var(--x) var(--y), rgba(255, 255, 255, 0.74), rgba(125, 239, 255, 0.36) 14%, rgba(255, 255, 255, 0) 35%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.34), transparent 48%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.water-hover-section::after {
+  animation: waterDrift var(--wave-speed) linear infinite;
+  background-image:
+    linear-gradient(100deg, transparent 0 20%, rgba(255, 255, 255, 0.22) 42%, transparent 65%),
+    radial-gradient(ellipse at 45% 84%, rgba(255, 255, 255, 0.24), transparent 35%),
+    radial-gradient(ellipse at 76% 96%, rgba(125, 239, 255, 0.28), transparent 42%);
+  background-position: -220px 0, 0 0, 0 0;
+  background-size: 260px 100%, 100% 100%, 100% 100%;
+  content: "";
+  filter: url("#water-turbulence") blur(0.2px);
+  inset: -18%;
+  opacity: 0.28;
+  pointer-events: none;
+  position: absolute;
+  transform: rotate(-3deg);
+  transition: opacity 260ms ease;
+  z-index: -1;
+}
+
+.water-hover-section[data-hover="true"] {
+  --shine-opacity: 0.52;
+  --wave-speed: 11s;
+}
+
+.water-hover-section[data-hover="true"]::after {
+  opacity: 0.58;
+}
+
+.cursor-light {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.65), rgba(129, 230, 255, 0.26) 36%, transparent 68%);
+  height: 19rem;
+  left: var(--x);
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: var(--y);
+  transform: translate(-50%, -50%) scale(0.74);
+  transition: opacity 240ms ease, transform 240ms ease;
+  width: 19rem;
+  z-index: 0;
+}
+
+.water-hover-section[data-hover="true"] .cursor-light {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.water-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.water-button::before {
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  content: "";
+  inset: -120% -40%;
+  opacity: 0;
+  position: absolute;
+  transform: translateX(-40%) rotate(18deg);
+  transition: opacity 180ms ease, transform 520ms ease;
+}
+
+.water-hover-section[data-hover="true"] .water-button::before {
+  opacity: 1;
+  transform: translateX(45%) rotate(18deg);
+}
+
+@keyframes waterDrift {
+  0% {
+    background-position: -260px 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 260px 0, 24px 0, -18px 0;
+  }
+}
+
+@keyframes floatBubble {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) scale(1.06);
+  }
+}
+
+@keyframes waveSlide {
+  0% {
+    transform: translateX(-4%);
+  }
+  50% {
+    transform: translateX(4%);
+  }
+  100% {
+    transform: translateX(-4%);
+  }
+}
+
+.reveal-up {
+  animation: revealUp 0.7s ease both;
+}
+
+.reveal-up-delay-1 {
+  animation: revealUp 0.7s 0.1s ease both;
+}
+
+.reveal-up-delay-2 {
+  animation: revealUp 0.7s 0.2s ease both;
+}
+
+.reveal-up-delay-3 {
+  animation: revealUp 0.7s 0.3s ease both;
+}
+
+.floating-card {
+  animation: floatingCard 5s ease-in-out infinite;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatingCard {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
