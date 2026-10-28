@@ -19,7 +19,7 @@ export const SERVICES: Service[] = [
   {id:'construccion', title:'Construcción de piscinas', subtitle:'Del proyecto a la primera inmersión',
     description:'Construcción integral de piscinas residenciales y comerciales, espejos de agua y SPA, de acuerdo con cada proyecto.',
     details:['Estructura en concreto','Instalaciones hidráulicas y electromecánicas','Impermeabilización y revestimientos','Iluminación y accesorios básicos'],
-    image:'/media/norberto-despues.webp'},
+    image:'/media/proyecto-construccion-despues.webp'},
   {id:'remodelacion', title:'Remodelación de piscinas', subtitle:'Una nueva vida para tu piscina',
     description:'Renovación de piscinas existentes, corrección de deterioros y actualización de acabados, accesorios o equipos.',
     details:['Revisión general de la piscina','Reparación de áreas deterioradas','Cambio o renovación de revestimientos','Corrección de fugas visibles y puntos de reparación'],
@@ -59,15 +59,15 @@ export const FAQ = [
 ];
 
 export const GALLERY = [
-  {src:'/media/norberto-despues.webp',label:'Construcción · Proyecto Norberto'},
-  {src:'/media/norberto-antes.webp',label:'Construcción · Etapa inicial'},
+  {src:'/media/proyecto-construccion-despues.webp',label:'Construcción · Proyecto Norberto'},
+  {src:'/media/proyecto-construccion-antes.webp',label:'Construcción · Etapa inicial'},
   {src:'/media/remodelacion-resultado.webp',label:'Remodelación · Resultado'},
   {src:'/media/remodelacion-resultado-2.webp',label:'Remodelación · Acabados'},
   {src:'/media/recuperacion-resultado.webp',label:'Recuperación de agua · Resultado'},
   {src:'/media/mantenimiento-resultado-2.webp',label:'Mantenimiento de piscinas'},
   {src:'/media/equipos-25.webp',label:'Instalación de equipos'},
   {src:'/media/asesoria-06.webp',label:'Asesoramiento técnico'},
-  {src:'/media/villasenor-proceso.webp',label:'Remodelación · En proceso'},
+  {src:'/media/proyecto-remodelacion-proceso.webp',label:'Remodelación · En proceso'},
 ] as const;
 
 export const VIDEOS = [

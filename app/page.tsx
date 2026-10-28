@@ -8,6 +8,9 @@ import { About } from '@/components/About';
 import { Questions } from '@/components/Questions';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
+import { approvedSiteUrl } from '@/lib/site-url';
+
+export const metadata = { alternates: approvedSiteUrl() ? { canonical: '/' } : undefined };
 
 export default function Home() {
  return <>

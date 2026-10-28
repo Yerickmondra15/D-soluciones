@@ -2,12 +2,13 @@ import Image from "next/image";
 import { ArrowDown, ArrowUpRight, Check } from "lucide-react";
 import { BUSINESS } from "@/data/site";
 import { whatsappLink } from "@/lib/whatsapp";
+import { ScrollWaterTransition } from "./ScrollWaterTransition";
 
 export function Hero() {
   return (
     <section id="inicio" className="hero" aria-labelledby="hero-title">
       <div className="hero-photo">
-        <Image src="/media/norberto-despues.webp" fill priority sizes="100vw"
+        <Image src="/media/proyecto-construccion-despues.webp" fill priority sizes="100vw"
           alt="Piscina terminada con revestimiento azul y escalones del proyecto Norberto" />
       </div>
       <div className="hero-overlay" />
@@ -28,7 +29,7 @@ export function Hero() {
         </div>
         <p className="hero-caption">PROYECTO NORBERTO <span>Construcción de piscina</span></p>
       </div>
-      <svg className="hero-wave" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 65 C280 -15 550 140 840 50 C1120 -20 1290 50 1440 35 L1440 100 L0 100Z" fill="#f5fafc" /></svg>
+      <ScrollWaterTransition />
     </section>
   );
 }

@@ -3,11 +3,15 @@
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, ArrowLeftRight, ArrowUpRight, X, Maximize2 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Reveal } from "./Reveal";
 import { GALLERY } from "@/data/site";
 
 export function Projects() {
   const [slider, setSlider] = useState(50);
   const [active, setActive] = useState<number | null>(null);
+  const [closing, setClosing] = useState(false);
+  const reduce = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
   const isOpen = active !== null;
@@ -27,6 +31,7 @@ export function Projects() {
 
   const change = (direction: number) => setActive(index => index === null ? null : (index + direction + GALLERY.length) % GALLERY.length);
   const item = active !== null ? GALLERY[active] : null;
+  const close = () => setClosing(true);
 
   return (
     <section id="proyectos" className="section projects-section">
@@ -37,8 +42,8 @@ export function Projects() {
         </div>
         <div className="compare-layout">
           <div className="compare-frame">
-            <div className="compare-after"><Image src="/media/norberto-despues.webp" fill alt="Proyecto Norberto después: piscina terminada con revestimiento azul" sizes="(max-width: 900px) 95vw, 60vw" /></div>
-            <div className="compare-before" style={{ clipPath: `inset(0 ${100 - slider}% 0 0)` }}><Image src="/media/norberto-antes.webp" fill alt="Proyecto Norberto antes: excavación y estructura inicial" sizes="(max-width: 900px) 95vw, 60vw" /></div>
+            <div className="compare-after"><Image src="/media/proyecto-construccion-despues.webp" fill alt="Proyecto Norberto después: piscina terminada con revestimiento azul" sizes="(max-width: 900px) 95vw, 60vw" /></div>
+            <div className="compare-before" style={{ clipPath: `inset(0 ${100 - slider}% 0 0)` }}><Image src="/media/proyecto-construccion-antes.webp" fill alt="Proyecto Norberto antes: excavación y estructura inicial" sizes="(max-width: 900px) 95vw, 60vw" /></div>
             <span className="compare-tag compare-tag-before">Antes</span>
             <span className="compare-tag compare-tag-after">Después</span>
             <span className="compare-line" style={{ left: `${slider}%` }} aria-hidden="true"><span><ArrowLeftRight size={23} /></span></span>
@@ -55,15 +60,15 @@ export function Projects() {
         <div className="gallery-grid">
           {GALLERY.map((photo, index) => (
             <button className={`gallery-item gallery-${index + 1}`} key={photo.src} type="button" onClick={event => { opener.current = event.currentTarget; setActive(index); }} aria-label={`Ampliar fotografía: ${photo.label}`}>
-              <Image src={photo.src} fill sizes={index === 0 ? "(max-width: 680px) 95vw, 50vw" : "(max-width: 680px) 46vw, 25vw"} alt={photo.label} />
+              <Reveal image className="gallery-photo" index={index % 3}><Image src={photo.src} fill sizes={index === 0 ? "(max-width: 680px) 95vw, 50vw" : "(max-width: 680px) 46vw, 25vw"} alt={photo.label} /></Reveal>
               <span>{photo.label}<Maximize2 size={17} aria-hidden="true" /></span>
             </button>
           ))}
         </div>
       </div>
       <dialog ref={dialog} className="gallery-dialog" aria-labelledby="gallery-caption"
-        onCancel={() => setActive(null)}
-        onClick={event => { if (event.target === event.currentTarget) setActive(null); }}
+        onCancel={event => { event.preventDefault(); close(); }}
+        onClick={event => { if (event.target === event.currentTarget) close(); }}
         onKeyDown={event => {
           if (event.key === "Tab") {
             const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>("button");
@@ -79,15 +84,17 @@ export function Projects() {
           if (event.key === "ArrowRight") { event.preventDefault(); change(1); }
           if (event.key === "ArrowLeft") { event.preventDefault(); change(-1); }
         }}>
-        {item && <div className="gallery-dialog-content">
-          <button className="gallery-close icon-button" autoFocus type="button" onClick={() => setActive(null)} aria-label="Cerrar galería" title="Cerrar galería"><X /></button>
-          <div className="gallery-large"><Image src={item.src} fill sizes="(max-width: 1000px) 92vw, 1000px" alt={item.label} /></div>
+        {item && <motion.div className="gallery-dialog-content" initial={{ opacity: reduce ? 1 : 0, y: reduce ? 0 : 12, scale: reduce ? 1 : .985 }}
+          animate={{ opacity: closing ? 0 : 1, y: closing && !reduce ? 12 : 0, scale: closing && !reduce ? .985 : 1 }}
+          transition={{ duration: reduce ? 0 : .22 }} onAnimationComplete={() => { if (closing) { setActive(null); setClosing(false); } }}>
+          <button className="gallery-close icon-button" autoFocus type="button" onClick={close} aria-label="Cerrar galería" title="Cerrar galería"><X /></button>
+          <div className="gallery-large"><AnimatePresence initial={false}><motion.div className="gallery-slide" key={item.src} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : .18 }}><Image src={item.src} fill sizes="(max-width: 1000px) 92vw, 1000px" alt={item.label} /></motion.div></AnimatePresence></div>
           <div className="gallery-controls">
             <button className="icon-button" type="button" onClick={() => change(-1)} aria-label="Fotografía anterior" title="Fotografía anterior"><ArrowLeft /></button>
             <p id="gallery-caption" aria-live="polite">{item.label}<span>{(active ?? 0) + 1} / {GALLERY.length}</span></p>
             <button className="icon-button" type="button" onClick={() => change(1)} aria-label="Fotografía siguiente" title="Fotografía siguiente"><ArrowRight /></button>
           </div>
-        </div>}
+        </motion.div>}
       </dialog>
     </section>
   );

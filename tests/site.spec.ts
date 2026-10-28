@@ -58,7 +58,7 @@ test("catálogo sin inventario ficticio y filtros", async ({ page }) => {
   await expect(page.locator(".catalog-card h3")).toHaveText("Filtros");
   await page.getByRole("button", { name: "Todos", exact: true }).click();
   await page.getByRole("searchbox").fill("iluminacion");
-  await expect(page.locator(".catalog-card h3")).toHaveText("Iluminación");
+  await expect(page.locator(".catalog-card h3")).toHaveText(["Iluminación"]);
   await page.getByRole("searchbox").fill("no-existe");
   await expect(page.getByText("No encontramos resultados.")).toBeVisible();
   await page.getByRole("button", { name: "Limpiar filtros" }).click();
@@ -164,7 +164,7 @@ test("sin desbordamientos, medios visibles y cabeceras de seguridad", async ({ p
   expect(response?.headers()["x-frame-options"]).toBe("DENY");
   expect(response?.headers()["content-security-policy"]).toContain("object-src 'none'");
   expect(await page.locator("html").getAttribute("lang")).toBe("es-CR");
-  expect(await page.locator("meta[property='og:image']").getAttribute("content")).toContain("norberto-despues.webp");
+  expect(await page.locator("meta[property='og:image']").getAttribute("content")).toContain("proyecto-construccion-despues.webp");
   await page.locator(".hero-photo img").evaluate(image => (image as HTMLImageElement).decode());
   expect(await page.locator(".hero-photo img").evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(100);
   for (const width of info.project.name === "mobile" ? [320, 390, 680] : [768, 1024, 1440, 1920]) {

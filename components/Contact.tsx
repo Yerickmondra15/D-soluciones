@@ -5,6 +5,7 @@ import { ArrowUpRight, MapPin, Phone } from "lucide-react";
 import { BUSINESS, SERVICES } from "@/data/site";
 import { whatsappLink } from "@/lib/whatsapp";
 import { WaterHoverSection } from "./WaterHoverSection";
+import { Reveal } from "./Reveal";
 
 export function Contact() {
   const [error, setError] = useState("");
@@ -27,7 +28,7 @@ export function Contact() {
   }
 
   return <WaterHoverSection>
-    <div className="container contact-grid">
+    <Reveal className="container contact-grid">
       <div className="contact-copy">
         <p className="eyebrow">HABLEMOS DE TU PROYECTO</p>
         <h2 id="contact-title">El siguiente paso empieza <em>con una conversación.</em></h2>
@@ -50,6 +51,6 @@ export function Contact() {
           <p className="form-note">No guardamos tu consulta. El mensaje solo se envía cuando lo confirmés en WhatsApp.</p>
         </form>
       </div>
-    </div>
+    </Reveal>
   </WaterHoverSection>;
 }

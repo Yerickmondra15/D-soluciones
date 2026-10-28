@@ -42,6 +42,15 @@ Las pruebas de Playwright utilizan Microsoft Edge instalado y perfiles de escrit
 y celular. Se puede cambiar la URL con `PLAYWRIGHT_BASE_URL`. Las pruebas del
 formulario interceptan WhatsApp: no envían mensajes reales.
 
+La iteración de animaciones usa Motion para altura, layout y scroll nativo.
+Incluye pruebas de movimiento real y auditoría axe de las dos rutas. Firefox es
+opcional con `PLAYWRIGHT_FIREFOX=1`; requiere un runtime de Playwright que el
+equipo permita ejecutar. En este equipo se descargó pero no pudo iniciarse,
+por lo que no se declara validación en ese motor.
+
+Ver `docs/ANIMACIONES_Y_QA_2026.md` para la matriz de la propuesta, evidencias,
+resultados de QA y pasos de subida manual sin merge ni publicación automática.
+
 ## Contenido y estructura
 
 - `data/site.ts`: seis servicios, preguntas frecuentes, contacto, galería y videos.
@@ -79,8 +88,10 @@ producción. Una CSP estricta con nonces requeriría renderizado dinámico.
 
 Antes de publicar: confirmar marca y eslogan, permisos de fotos y propiedades,
 inventario, dominio y política de privacidad. Configurar `SITE_URL` con el dominio
-aprobado para los enlaces OpenGraph (ver `.env.example`). HTTPS, HSTS, canonical,
-robots y sitemap se deben finalizar con el alojamiento y hostname definitivos.
+aprobado para los enlaces OpenGraph (ver `.env.example`). HTTPS y HSTS se
+configuran en el alojamiento con el dominio aprobado. Canonical, robots y sitemap
+ya se generan de forma condicionada al hostname definitivo.
+Sin SITE_URL HTTPS aprobado, el preview lleva noindex y robots bloquea indexación.
 Correo, dirección, horarios, redes, reseñas y cifras no se muestran sin confirmación.
 
 La auditoría de dependencias no sustituye una revisión completa de seguridad.

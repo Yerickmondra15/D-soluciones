@@ -24,8 +24,25 @@ export function WaterHoverSection({ children }: { children: ReactNode }) {
     };
     update();
     preference.addEventListener("change", update);
+    const section = sectionRef.current;
+    let intersecting = false;
+    const syncVisibility = () => {
+      const visible = intersecting && !document.hidden;
+      section?.setAttribute("data-visible", String(visible));
+      if (!visible) {
+        pointer.current.active = false;
+        section?.setAttribute("data-hover", "false");
+        if (frame.current !== null) cancelAnimationFrame(frame.current);
+        frame.current = null;
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => { intersecting = entry.isIntersecting; syncVisibility(); });
+    if (section) observer.observe(section);
+    document.addEventListener("visibilitychange", syncVisibility);
     return () => {
       preference.removeEventListener("change", update);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", syncVisibility);
       if (frame.current !== null) cancelAnimationFrame(frame.current);
     };
   }, []);
@@ -66,7 +83,7 @@ export function WaterHoverSection({ children }: { children: ReactNode }) {
     schedule();
   }
 
-  return <section id="contacto" ref={sectionRef} className="water-hover-section contact-section" aria-labelledby="contact-title" data-hover="false"
+  return <section id="contacto" ref={sectionRef} className="water-hover-section contact-section" aria-labelledby="contact-title" data-hover="false" data-visible="false"
     onMouseMove={move}
     onMouseEnter={event => { if (!reduced.current) { pointer.current.active = true; event.currentTarget.dataset.hover = "true"; } }}
     onMouseLeave={event => {

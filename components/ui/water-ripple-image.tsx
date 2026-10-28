@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { prefersLightweightEffects } from "@/lib/motion";
 
 type Pointer = { x: number; y: number; active: boolean };
 type Props = { src: string; pointer: RefObject<Pointer> };
@@ -46,7 +47,7 @@ export function WaterRippleImage({ src, pointer }: Props) {
 
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
-    const change = () => setAnimate(!preference.matches);
+    const change = () => setAnimate(!preference.matches && !prefersLightweightEffects());
     change();
     preference.addEventListener("change", change);
     return () => preference.removeEventListener("change", change);
@@ -169,7 +170,7 @@ export function WaterRippleImage({ src, pointer }: Props) {
           pointerTop = (rect.top - parent.top) / parent.height;
           pointerHeight = Math.max(0.01, rect.height / parent.height);
         }
-        const dpr = Math.min(devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1 : 1.5);
         surface.width = Math.max(1, Math.round(rect.width * dpr));
         surface.height = Math.max(1, Math.round(rect.height * dpr));
         gl.viewport(0, 0, surface.width, surface.height);
