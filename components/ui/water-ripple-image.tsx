@@ -1,243 +1,209 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
-type WaterRippleImageProps = {
-  blueish?: number;
-  scale?: number;
-  illumination?: number;
-  surfaceDistortion?: number;
-  waterDistortion?: number;
-  src?: string;
-  className?: string;
-};
+type Pointer = { x: number; y: number; active: boolean };
+type Props = { src: string; pointer: RefObject<Pointer> };
 
-const VERT = `
-precision mediump float;
-varying vec2 vUv;
+const VERTEX = `
 attribute vec2 a_position;
+varying vec2 v_uv;
 void main() {
-  vUv = .5 * (a_position + 1.);
+  v_uv = (a_position + 1.0) * 0.5;
   gl_Position = vec4(a_position, 0.0, 1.0);
-}
-`;
+}`;
 
-const FRAG = `
+const FRAGMENT = `
 precision mediump float;
-varying vec2 vUv;
-uniform sampler2D u_image_texture;
+varying vec2 v_uv;
+uniform sampler2D u_image;
 uniform float u_time;
-uniform float u_ratio;
-uniform float u_img_ratio;
-uniform float u_blueish;
-uniform float u_scale;
-uniform float u_illumination;
-uniform float u_surface_distortion;
-uniform float u_water_distortion;
-
-vec3 mod289(vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
-vec2 mod289(vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
-vec3 permute(vec3 x) { return mod289(((x*34.)+1.)*x); }
-
-float snoise(vec2 v) {
-  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
-  vec2 i = floor(v + dot(v, C.yy));
-  vec2 x0 = v - i + dot(i, C.xx);
-  vec2 i1 = (x0.x > x0.y) ? vec2(1., 0.) : vec2(0., 1.);
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-  i = mod289(i);
-  vec3 p = permute(permute(i.y + vec3(0., i1.y, 1.)) + i.x + vec3(0., i1.x, 1.));
-  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.);
-  m = m*m;
-  m = m*m;
-  vec3 x = 2. * fract(p * C.www) - 1.;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
-  vec3 g;
-  g.x = a0.x * x0.x + h.x * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130. * dot(m, g);
-}
-
-mat2 rotate2D(float r) {
-  return mat2(cos(r), sin(r), -sin(r), cos(r));
-}
-
-float surface_noise(vec2 uv, float t, float scale) {
-  vec2 n = vec2(.1);
-  vec2 N = vec2(.1);
-  mat2 m = rotate2D(.5);
-  for (int j = 0; j < 10; j++) {
-    uv *= m;
-    n *= m;
-    vec2 q = uv * scale + float(j) + n + (.5 + .5 * float(j)) * (mod(float(j), 2.) - 1.) * t;
-    n += sin(q);
-    N += cos(q) / scale;
-    scale *= 1.2;
-  }
-  return (N.x + N.y + .1);
-}
-
+uniform float u_aspect;
+uniform float u_image_aspect;
+uniform float u_hover;
+uniform vec2 u_pointer;
 void main() {
-  vec2 uv = vUv;
-  uv.y = 1. - uv.y;
-  uv.x *= u_ratio;
+  vec2 delta = (v_uv - u_pointer) * vec2(u_aspect, 1.0);
+  float distance = length(delta);
+  float ripple = sin(distance * 38.0 - u_time * 4.0) * exp(-distance * 6.0) * u_hover;
+  vec2 uv = v_uv;
+  uv += normalize(delta + vec2(0.0001)) * ripple * 0.012;
+  uv += vec2(sin(uv.y * 25.0 + u_time), cos(uv.x * 20.0 + u_time * 0.7)) * 0.002;
+  vec2 cover = uv - 0.5;
+  if (u_aspect > u_image_aspect) cover.y *= u_image_aspect / u_aspect;
+  else cover.x *= u_aspect / u_image_aspect;
+  cover.y = -cover.y;
+  vec3 color = texture2D(u_image, clamp(cover + 0.5, 0.001, 0.999)).rgb;
+  float caustic = pow(0.5 + 0.5 * sin(uv.x * 30.0 + sin(uv.y * 22.0 + u_time) * 2.0), 8.0);
+  color += vec3(0.05, 0.10, 0.12) * caustic * (0.25 + u_hover * 0.35);
+  gl_FragColor = vec4(color, 1.0);
+}`;
 
-  float t = .002 * u_time;
-  float outer_noise = snoise((.3 + .1 * sin(t)) * uv + vec2(0., .2 * t));
-  vec2 surface_noise_uv = 2. * uv + (outer_noise * .2);
-
-  float surf = surface_noise(surface_noise_uv, t, u_scale);
-  surf *= pow(uv.y, .3);
-  surf = pow(surf, 2.);
-
-  vec2 img_uv = vUv - .5;
-  if (u_ratio > u_img_ratio) {
-    img_uv.x = img_uv.x * u_ratio / u_img_ratio;
-  } else {
-    img_uv.y = img_uv.y * u_img_ratio / u_ratio;
-  }
-  img_uv *= 1.28;
-  img_uv += .5;
-  img_uv.y = 1. - img_uv.y;
-  img_uv += (u_water_distortion * outer_noise);
-  img_uv += (u_surface_distortion * surf);
-
-  vec4 img = texture2D(u_image_texture, img_uv);
-  img *= (1. + u_illumination * surf);
-
-  vec3 color = img.rgb + u_illumination * vec3(1. - u_blueish, 1., 1.) * surf;
-  float alpha = smoothstep(.0, .12, vUv.y) * img.a;
-  gl_FragColor = vec4(color, alpha);
-}
-`;
-
-function compileShader(gl: WebGLRenderingContext, src: string, type: number) {
-  const shader = gl.createShader(type);
-  if (!shader) throw new Error("No se pudo crear el shader.");
-  gl.shaderSource(shader, src);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    const info = gl.getShaderInfoLog(shader);
-    gl.deleteShader(shader);
-    throw new Error(`Shader compile error: ${info || "unknown"}`);
-  }
-  return shader;
-}
-
-function createProgram(gl: WebGLRenderingContext) {
-  const vertex = compileShader(gl, VERT, gl.VERTEX_SHADER);
-  const fragment = compileShader(gl, FRAG, gl.FRAGMENT_SHADER);
-  const program = gl.createProgram();
-  if (!program) throw new Error("No se pudo crear el programa WebGL.");
-  gl.attachShader(program, vertex);
-  gl.attachShader(program, fragment);
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    const info = gl.getProgramInfoLog(program);
-    gl.deleteProgram(program);
-    throw new Error(`Program link error: ${info || "unknown"}`);
-  }
-  return program;
-}
-
-export function WaterRippleImage({
-  blueish = 0.45,
-  scale = 7,
-  illumination = 0.18,
-  surfaceDistortion = 0.035,
-  waterDistortion = 0.018,
-  src = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80",
-  className = ""
-}: WaterRippleImageProps) {
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationRef = useRef<number | null>(null);
+export function WaterRippleImage({ src, pointer }: Props) {
+  const wrapper = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const wrapper = wrapperRef.current;
-    if (!canvas || !wrapper) return;
+    const preference = matchMedia("(prefers-reduced-motion: reduce)");
+    const change = () => setAnimate(!preference.matches);
+    change();
+    preference.addEventListener("change", change);
+    return () => preference.removeEventListener("change", change);
+  }, []);
 
-    const gl = canvas.getContext("webgl", { alpha: true, antialias: true });
+  useEffect(() => {
+    const box = wrapper.current;
+    const surface = canvas.current;
+    if (!box || !surface || !animate) return;
+    const gl = surface.getContext("webgl", { alpha: false, antialias: false, powerPreference: "low-power" });
     if (!gl) return;
+    let program: WebGLProgram | null = null;
+    let buffer: WebGLBuffer | null = null;
+    let texture: WebGLTexture | null = null;
+    const shaders: WebGLShader[] = [];
+    let frame: number | null = null;
+    let alive = true;
+    let visible = false;
+    let loaded = false;
+    let last = 0;
+    let clock = 0;
+    let intensity = 0;
+    let draws = 0;
+    let pointerTop = 0.3;
+    let pointerHeight = 0.7;
+    const image = new window.Image();
+    let observer: IntersectionObserver | null = null;
+    let resizer: ResizeObserver | null = null;
 
-    const program = createProgram(gl);
-    gl.useProgram(program);
-
-    const uniforms: Record<string, WebGLUniformLocation | null> = {};
-    const uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-    for (let index = 0; index < uniformCount; index++) {
-      const info = gl.getActiveUniform(program, index);
-      if (info) uniforms[info.name] = gl.getUniformLocation(program, info.name);
+    function stop() {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      last = 0;
+    }
+    function release() {
+      alive = false;
+      stop();
+      image.onload = null;
+      image.onerror = null;
+      observer?.disconnect();
+      resizer?.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+      surface?.removeEventListener("webglcontextlost", lost);
+      if (texture) gl?.deleteTexture(texture);
+      if (buffer) gl?.deleteBuffer(buffer);
+      if (program) gl?.deleteProgram(program);
+      shaders.forEach(shader => gl?.deleteShader(shader));
+      if (box) box.dataset.webgl = "fallback";
+    }
+    function lost() {
+      loaded = false;
+      stop();
+      if (box) box.dataset.webgl = "fallback";
+    }
+    function sync() {
+      if (alive && loaded && visible && !document.hidden && !gl?.isContextLost()) {
+        if (frame === null) frame = requestAnimationFrame(draw);
+      } else stop();
     }
 
-    const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    let timeLocation: WebGLUniformLocation | null = null;
+    let hoverLocation: WebGLUniformLocation | null = null;
+    let pointerLocation: WebGLUniformLocation | null = null;
 
-    const position = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(position);
-    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    function draw(time: number) {
+      frame = null;
+      if (!gl || !surface || !alive || !loaded || !visible || document.hidden) return;
+      if (last && time - last < 32) { frame = requestAnimationFrame(draw); return; }
+      const delta = last ? Math.min(50, time - last) : 16;
+      last = time;
+      clock += delta / 1000;
+      intensity += ((pointer.current.active ? 1 : 0) - intensity) * (1 - Math.exp(-delta / 140));
+      gl.uniform1f(timeLocation, clock);
+      gl.uniform1f(hoverLocation, intensity);
+      const localY = Math.max(0, Math.min(1, (pointer.current.y / 100 - pointerTop) / pointerHeight));
+      gl.uniform2f(pointerLocation, pointer.current.x / 100, 1 - localY);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      box!.dataset.webgl = "ready";
+      surface.dataset.frames = String(++draws);
+      frame = requestAnimationFrame(draw);
+    }
 
-    gl.uniform1f(uniforms.u_blueish, blueish);
-    gl.uniform1f(uniforms.u_scale, scale);
-    gl.uniform1f(uniforms.u_illumination, illumination);
-    gl.uniform1f(uniforms.u_surface_distortion, surfaceDistortion);
-    gl.uniform1f(uniforms.u_water_distortion, waterDistortion);
-    gl.uniform1i(uniforms.u_image_texture, 0);
-
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.src = src;
-    image.onload = () => {
-      const texture = gl.createTexture();
-      gl.activeTexture(gl.TEXTURE0);
+    try {
+      for (const [type, source] of [[gl.VERTEX_SHADER, VERTEX], [gl.FRAGMENT_SHADER, FRAGMENT]] as const) {
+        const shader = gl.createShader(type);
+        if (!shader) throw new Error("shader");
+        shaders.push(shader);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error("shader compilation");
+      }
+      program = gl.createProgram();
+      if (!program) throw new Error("program");
+      shaders.forEach(shader => gl.attachShader(program!, shader));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("program link");
+      gl.useProgram(program);
+      buffer = gl.createBuffer();
+      texture = gl.createTexture();
+      if (!buffer || !texture) throw new Error("allocation");
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+      const position = gl.getAttribLocation(program, "a_position");
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      gl.uniform1f(uniforms.u_img_ratio, image.naturalWidth / image.naturalHeight);
-    };
+      gl.uniform1i(gl.getUniformLocation(program, "u_image"), 0);
+      timeLocation = gl.getUniformLocation(program, "u_time");
+      hoverLocation = gl.getUniformLocation(program, "u_hover");
+      pointerLocation = gl.getUniformLocation(program, "u_pointer");
 
-    const resize = () => {
-      const rect = wrapper.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.uniform1f(uniforms.u_ratio, canvas.width / canvas.height);
-    };
+      const resize = () => {
+        const rect = box.getBoundingClientRect();
+        const parent = box.parentElement?.getBoundingClientRect();
+        if (parent && parent.height > 0) {
+          pointerTop = (rect.top - parent.top) / parent.height;
+          pointerHeight = Math.max(0.01, rect.height / parent.height);
+        }
+        const dpr = Math.min(devicePixelRatio || 1, 1.5);
+        surface.width = Math.max(1, Math.round(rect.width * dpr));
+        surface.height = Math.max(1, Math.round(rect.height * dpr));
+        gl.viewport(0, 0, surface.width, surface.height);
+        gl.uniform1f(gl.getUniformLocation(program!, "u_aspect"), surface.width / surface.height);
+      };
+      resizer = new ResizeObserver(resize);
+      resizer.observe(box);
+      resize();
 
-    const observer = new ResizeObserver(resize);
-    observer.observe(wrapper);
-    resize();
+      image.onload = () => {
+        if (!alive || gl.isContextLost()) return;
+        try {
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+          gl.uniform1f(gl.getUniformLocation(program!, "u_image_aspect"), image.naturalWidth / image.naturalHeight);
+          loaded = true;
+          sync();
+        } catch { lost(); }
+      };
+      image.onerror = lost;
+      observer = new IntersectionObserver(([entry]) => {
+        if (!alive) return;
+        visible = entry.isIntersecting;
+        if (visible && !image.src) image.src = src;
+        sync();
+      }, { threshold: 0.05 });
+      observer.observe(box);
+      document.addEventListener("visibilitychange", sync);
+      surface.addEventListener("webglcontextlost", lost);
+    } catch {
+      release();
+    }
+    return release;
+  }, [animate, src, pointer]);
 
-    const render = () => {
-      gl.uniform1f(uniforms.u_time, performance.now());
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      animationRef.current = requestAnimationFrame(render);
-    };
-    render();
-
-    return () => {
-      observer.disconnect();
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      gl.deleteProgram(program);
-      if (buffer) gl.deleteBuffer(buffer);
-    };
-  }, [blueish, illumination, scale, src, surfaceDistortion, waterDistortion]);
-
-  return (
-    <div ref={wrapperRef} className={`pointer-events-none absolute inset-x-0 bottom-0 ${className}`} aria-hidden="true">
-      <canvas ref={canvasRef} className="h-full w-full" />
-    </div>
-  );
+  return <div ref={wrapper} className="water-ripple" aria-hidden="true" data-webgl="fallback" style={{ backgroundImage: `url("${src}")` }}><canvas ref={canvas} /></div>;
 }
