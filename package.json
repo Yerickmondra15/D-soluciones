@@ -2,6 +2,9 @@
   "name": "piscinas-gds",
   "version": "0.2.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +12,8 @@
     "lint": "eslint app components data lib",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:media": "node --test tests/media.test.mjs"
+    "test:media": "node --test tests/media.test.mjs",
+    "test:seo": "node --test tests/site-url.test.mjs"
   },
   "dependencies": {
     "next": "15.5.28",

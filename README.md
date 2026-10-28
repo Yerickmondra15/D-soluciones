@@ -1,7 +1,12 @@
 # Piscinas GDS
 
 Actualización integrada al proyecto Next.js, React, TypeScript y Tailwind existente.
-Rama de trabajo: `codex/gds-actualizacion-2026`. No se publica automáticamente.
+Rama de trabajo y publicación de la demo: `codex/gds-actualizacion-2026`.
+Alojamiento elegido: Netlify Free, sin dominio personalizado ni servicios de pago.
+Estado y comprobaciones en `docs/DESPLIEGUE_NETLIFY.md`. Vercel no está conectado.
+
+Demo pública: https://piscinas-gds.netlify.app (sin iniciar sesión, con noindex).
+Dashboard: https://app.netlify.com/projects/piscinas-gds/overview.
 
 ## Desarrollo local
 
@@ -27,8 +32,11 @@ No desactivar la verificación TLS.
 
 ```sh
 npm run typecheck
+npm run lint
 npm run test:media
+npm run test:seo
 npm run build
+npm audit
 npm audit --omit=dev
 ```
 
@@ -87,11 +95,51 @@ conservar la generación estática; no permite scripts de terceros ni eval en
 producción. Una CSP estricta con nonces requeriría renderizado dinámico.
 
 Antes de publicar: confirmar marca y eslogan, permisos de fotos y propiedades,
-inventario, dominio y política de privacidad. Configurar `SITE_URL` con el dominio
-aprobado para los enlaces OpenGraph (ver `.env.example`). HTTPS y HSTS se
+inventario, dominio y política de privacidad. Configurar `SITE_URL` solamente con
+el dominio definitivo aprobado (ver `.env.example`). Sin esa variable, las
+imágenes OpenGraph usan las URLs de despliegue de Netlify o el fallback de Next
+en Vercel, sin habilitar indexación, canonical ni entradas en sitemap. HTTPS y HSTS se
 configuran en el alojamiento con el dominio aprobado. Canonical, robots y sitemap
 ya se generan de forma condicionada al hostname definitivo.
 Sin SITE_URL HTTPS aprobado, el preview lleva noindex y robots bloquea indexación.
 Correo, dirección, horarios, redes, reseñas y cifras no se muestran sin confirmación.
 
 La auditoría de dependencias no sustituye una revisión completa de seguridad.
+
+## Demo en Netlify Free
+
+La integración oficial de Next.js se detecta automáticamente: raíz `./`, comando
+`npm run build` y directorio `.next`. `.node-version` fija Node.js 22, coherente
+con `engines`. No se usa exportación estática ni se fija una versión del adaptador.
+No hace falta `netlify.toml` para duplicar los ajustes detectados en el dashboard.
+`.netlify/` se mantiene fuera de Git.
+
+Mantener `SITE_URL` sin configurar en la demo. Las variables de sistema `NETLIFY`,
+`CONTEXT`, `DEPLOY_PRIME_URL`, `URL` y `DEPLOY_URL` resuelven OpenGraph pero no
+aprueban un dominio para SEO. En producción se usa la URL principal pública,
+no la URL de rama que puede seguir privada. No se necesitan claves de API,
+base de datos ni correo.
+
+En Free el consumo tiene un límite de créditos: el servicio puede pausarse al
+agotarlos, sin contratar recargas. No activar planes, pruebas de pago, dominios,
+complementos ni métodos de pago. El sitio debe estar Public para que el cliente
+lo abra sin una cuenta Netlify; publicar solo los medios autorizados. Un sitio
+público con noindex no es privado ni limita quién puede acceder al enlace.
+
+Los datos y resultados de publicación están en `docs/DESPLIEGUE_NETLIFY.md`.
+
+## Preparación Anterior de Vercel
+
+`vercel.json` fija Next.js, `npm ci` y `npm run build`; el directorio raíz es `./`
+y `engines` fija Node.js 22.x. `.vercelignore` excluye documentos internos,
+pruebas, resultados y archivos de entorno del envío por CLI. No sustituye el
+control de acceso del repositorio ni la protección del despliegue.
+
+No hay proyecto GDS creado o conectado a Vercel ni despliegue automático activo.
+Hobby solo permite uso personal no comercial. No contratar ni activar Pro sin
+autorización expresa del propietario. Antes del primer despliegue, configurar
+Vercel Authentication para All Deployments y verificar que las fotografías y
+videos no queden accesibles sin autorización. Mantener `SITE_URL` sin configurar
+en la demo. No habilitar Password Protection ni otros complementos de pago.
+
+Ver `docs/DESPLIEGUE_VERCEL.md` para el estado y las comprobaciones de esta etapa.
