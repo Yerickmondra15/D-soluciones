@@ -3,7 +3,7 @@ import { approvedSiteUrl } from '@/lib/site-url';
 import './globals.css';
 
 export const metadata: Metadata = {
- metadataBase: approvedSiteUrl() || new URL('http://localhost:3000'),
+ metadataBase: approvedSiteUrl(),
  robots: { index: Boolean(approvedSiteUrl()), follow: Boolean(approvedSiteUrl()) },
  title:{default:'Piscinas GDS | Cuidado integral para su piscina',template:'%s | Piscinas GDS'},
  description:'Mantenimiento, construcción, remodelación, instalación de equipos, asesoramiento técnico y recuperación de agua para piscinas en Costa Rica.',

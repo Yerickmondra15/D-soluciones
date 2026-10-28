@@ -1,7 +1,8 @@
 # Piscinas GDS
 
 Actualización integrada al proyecto Next.js, React, TypeScript y Tailwind existente.
-Rama de trabajo: `codex/gds-actualizacion-2026`. No se publica automáticamente.
+Rama de trabajo: `codex/gds-actualizacion-2026`. El despliegue en Vercel queda
+pendiente por decisión del propietario de no activar un plan de pago.
 
 ## Desarrollo local
 
@@ -27,8 +28,10 @@ No desactivar la verificación TLS.
 
 ```sh
 npm run typecheck
+npm run lint
 npm run test:media
 npm run build
+npm audit
 npm audit --omit=dev
 ```
 
@@ -87,11 +90,29 @@ conservar la generación estática; no permite scripts de terceros ni eval en
 producción. Una CSP estricta con nonces requeriría renderizado dinámico.
 
 Antes de publicar: confirmar marca y eslogan, permisos de fotos y propiedades,
-inventario, dominio y política de privacidad. Configurar `SITE_URL` con el dominio
-aprobado para los enlaces OpenGraph (ver `.env.example`). HTTPS y HSTS se
+inventario, dominio y política de privacidad. Configurar `SITE_URL` solamente con
+el dominio definitivo aprobado (ver `.env.example`). Sin esa variable, Next usa
+las variables de sistema de Vercel para las imágenes OpenGraph sin habilitar
+indexación, canonical ni entradas en sitemap. HTTPS y HSTS se
 configuran en el alojamiento con el dominio aprobado. Canonical, robots y sitemap
 ya se generan de forma condicionada al hostname definitivo.
 Sin SITE_URL HTTPS aprobado, el preview lleva noindex y robots bloquea indexación.
 Correo, dirección, horarios, redes, reseñas y cifras no se muestran sin confirmación.
 
 La auditoría de dependencias no sustituye una revisión completa de seguridad.
+
+## Preparación de Vercel
+
+`vercel.json` fija Next.js, `npm ci` y `npm run build`; el directorio raíz es `./`
+y `engines` fija Node.js 22.x. `.vercelignore` excluye documentos internos,
+pruebas, resultados y archivos de entorno del envío por CLI. No sustituye el
+control de acceso del repositorio ni la protección del despliegue.
+
+No hay proyecto GDS creado o conectado a Vercel ni despliegue automático activo.
+Hobby solo permite uso personal no comercial. No contratar ni activar Pro sin
+autorización expresa del propietario. Antes del primer despliegue, configurar
+Vercel Authentication para All Deployments y verificar que las fotografías y
+videos no queden accesibles sin autorización. Mantener `SITE_URL` sin configurar
+en la demo. No habilitar Password Protection ni otros complementos de pago.
+
+Ver `docs/DESPLIEGUE_VERCEL.md` para el estado y las comprobaciones de esta etapa.

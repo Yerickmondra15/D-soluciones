@@ -102,10 +102,18 @@ test("header compacto, rutas SEO y preview no indexable", async ({ page }) => {
   await page.evaluate(() => scrollTo(0, 0));
   await expect(page.locator(".site-header")).toHaveAttribute("data-scrolled", "false");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  const socialImage = await page.locator('meta[property="og:image"]').getAttribute("content");
+  expect(new URL(socialImage!).pathname).toBe("/media/proyecto-construccion-despues.webp");
+  if (process.env.PLAYWRIGHT_EXPECTED_METADATA_ORIGIN) {
+    expect(new URL(socialImage!).origin).toBe(process.env.PLAYWRIGHT_EXPECTED_METADATA_ORIGIN);
+  }
   const robots = await page.request.get("/robots.txt");
   expect(robots.status()).toBe(200);
   expect(await robots.text()).toContain("Disallow: /");
-  expect((await page.request.get("/sitemap.xml")).status()).toBe(200);
+  const sitemap = await page.request.get("/sitemap.xml");
+  expect(sitemap.status()).toBe(200);
+  expect(await sitemap.text()).not.toContain("<loc>");
   expect((await page.request.get("/.env")).status()).toBe(404);
   expect((await page.request.get("/docs/referencias/Informacion_Piscinas_GDS.docx")).status()).toBe(404);
 });
