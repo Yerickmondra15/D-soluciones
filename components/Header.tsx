@@ -1,61 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import { Icon } from "./Icon";
+import Image from "next/image";
+import Link from "next/link";
+import { Menu, X, ArrowUpRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { whatsappLink } from "@/lib/whatsapp";
 
-const links = ["Inicio", "Servicios", "Proyectos", "Proceso", "Nosotros", "Contacto"];
+const links = [["Inicio", "/#inicio"], ["Servicios", "/#servicios"], ["Proyectos", "/#proyectos"], ["Equipos", "/productos"], ["Nosotros", "/#nosotros"], ["Contacto", "/#contacto"]] as const;
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuHeight, setMenuHeight] = useState(0);
+  const menuLinks = useRef<HTMLDivElement>(null);
+  const animatedMenuHeight = useMotionValue(0);
+  const compact = useRef(false);
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", value => {
+    if ((value > 24) !== compact.current) {
+      compact.current = value > 24;
+      setScrolled(compact.current);
+    }
+  });
+  function closeMenu() { setClosing(true); setOpen(false); }
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const header = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const control = animate(animatedMenuHeight, open ? menuHeight : 0, {
+      duration: reduce ? 0 : .26, ease: [.22, 1, .36, 1],
+      onComplete: () => { if (!open) setClosing(false); }
+    });
+    return () => control.stop();
+  }, [open, menuHeight, reduce, animatedMenuHeight]);
+
+  useEffect(() => {
+    const links = menuLinks.current;
+    if (!links) return;
+    const observer = new ResizeObserver(() => {
+      const height = links.getBoundingClientRect().height;
+      if (height > 0) setMenuHeight(height);
+    });
+    observer.observe(links);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+        menuButton.current?.focus();
+      }
+    };
+    const outside = (event: PointerEvent) => {
+      if (!header.current?.contains(event.target as Node)) closeMenu();
+    };
+    const desktop = window.matchMedia("(min-width: 901px)");
+    const resize = () => { if (desktop.matches) { setOpen(false); setClosing(false); } };
+    document.addEventListener("keydown", close);
+    document.addEventListener("pointerdown", outside);
+    desktop.addEventListener("change", resize);
+    return () => {
+      document.removeEventListener("keydown", close);
+      document.removeEventListener("pointerdown", outside);
+      desktop.removeEventListener("change", resize);
+    };
+  }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-white/74 shadow-sm backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <a href="#inicio" className="flex items-center gap-3 font-black text-navy" aria-label="Grupo D Soluciones">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-aqua-400 to-blue-700 text-white shadow-glow">
-            <Icon name="waves" />
-          </span>
-          <span className="leading-tight">
-            <span className="block text-xl">GDS</span>
-            <span className="block text-sm text-aqua-600">Grupo D Soluciones</span>
-          </span>
-        </a>
-
-        <nav className="hidden items-center gap-9 text-sm font-semibold text-navy/80 lg:flex" aria-label="Navegación principal">
-          {links.map((link) => (
-            <a key={link} href={`#${link.toLowerCase()}`} className="transition hover:text-aqua-600">
-              {link}
-            </a>
-          ))}
+    <header className="site-header" ref={header} data-scrolled={scrolled}>
+      <div className="header-inner container">
+        <Link href="/#inicio" className="brand" aria-label="Piscinas GDS, ir al inicio">
+          <Image src="/media/logo-horizontal.webp" width={867} height={332} alt="Piscinas GDS" priority className="brand-logo" sizes="168px" />
+        </Link>
+        <nav className="desktop-nav" aria-label="Navegación principal">
+          {links.map(([text, href]) => <a key={href} href={href}>{text}</a>)}
         </nav>
-
-        <a href="#contacto" className="hidden rounded-full bg-aqua-500 px-6 py-3 text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-aqua-600 lg:inline-flex">
-          Solicitar cotización
+        <a className="btn btn-primary header-cta" href={whatsappLink("Hola, quisiera una cotización para mi piscina.")} target="_blank" rel="noopener noreferrer">
+          Cotizar por WhatsApp <ArrowUpRight size={17} />
         </a>
-
-        <button
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-          className="grid h-11 w-11 place-items-center rounded-full border border-aqua-200 text-navy lg:hidden"
-          onClick={() => setOpen((value) => !value)}
-        >
-          <Icon name={open ? "x" : "menu"} />
+        <button ref={menuButton} className="menu-toggle icon-button" type="button" onClick={() => { if (open) closeMenu(); else { setClosing(false); setOpen(true); } }} title={open ? "Cerrar menú" : "Abrir menú"} aria-label={open ? "Cerrar menú" : "Abrir menú"} aria-expanded={open} aria-controls="mobile-nav">
+          {open ? <X /> : <Menu />}
         </button>
       </div>
-
-      {open && (
-        <div className="border-t border-aqua-100 bg-white px-5 py-5 lg:hidden">
-          <nav className="mx-auto grid max-w-7xl gap-4 font-semibold text-navy/80">
-            {links.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`} onClick={() => setOpen(false)}>
-                {link}
-              </a>
-            ))}
-            <a href="#contacto" className="rounded-full bg-aqua-500 px-5 py-3 text-center text-white" onClick={() => setOpen(false)}>
-              Solicitar cotización
-            </a>
-          </nav>
+      <motion.nav id="mobile-nav" className="mobile-nav" aria-label="Navegación móvil" hidden={!open && !closing} inert={!open} aria-hidden={!open}
+        initial={false} style={{ height: animatedMenuHeight }} animate={{ opacity: open ? 1 : 0 }}
+        transition={{ duration: reduce ? 0 : .26, ease: [.22, 1, .36, 1] }}>
+        <div className="mobile-nav-links" ref={menuLinks}>
+          {links.map(([text, href]) => <a key={href} href={href} onClick={closeMenu}>{text}</a>)}
+          <a href={whatsappLink("Hola, quisiera una cotización para mi piscina.")} target="_blank" rel="noopener noreferrer" onClick={closeMenu}>Cotizar por WhatsApp <ArrowUpRight size={16} /></a>
         </div>
-      )}
+      </motion.nav>
     </header>
   );
 }

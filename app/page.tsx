@@ -1,23 +1,31 @@
-import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
-import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
-import { ProcessTimeline } from "@/components/ProcessTimeline";
-import { Services } from "@/components/Services";
-import { TestimonialsStats } from "@/components/TestimonialsStats";
-import { WaterHoverSection } from "@/components/WaterHoverSection";
-import { WaveDivider } from "@/components/WaveDivider";
+import { Header } from '@/components/Header';
+import { Hero } from '@/components/Hero';
+import { Services } from '@/components/Services';
+import { Projects } from '@/components/Projects';
+import { VideoShowcase } from '@/components/VideoShowcase';
+import { EquipmentCatalog } from '@/components/EquipmentCatalog';
+import { About } from '@/components/About';
+import { Questions } from '@/components/Questions';
+import { Contact } from '@/components/Contact';
+import { Footer } from '@/components/Footer';
+import { approvedSiteUrl } from '@/lib/site-url';
+
+export const metadata = { alternates: approvedSiteUrl() ? { canonical: '/' } : undefined };
 
 export default function Home() {
-  return (
-    <main className="min-h-screen overflow-hidden bg-white text-navy">
-      <Header />
-      <Hero />
-      <WaveDivider />
-      <Services />
-      <BeforeAfterSlider />
-      <ProcessTimeline />
-      <TestimonialsStats />
-      <WaterHoverSection />
-    </main>
-  );
+ return <>
+   <a className="skip-link" href="#contenido">Saltar al contenido</a>
+   <Header />
+   <main id="contenido">
+     <Hero />
+     <Services />
+     <Projects />
+     <VideoShowcase />
+     <EquipmentCatalog />
+     <About />
+     <Questions />
+     <Contact />
+   </main>
+   <Footer />
+ </>;
 }
