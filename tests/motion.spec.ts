@@ -107,6 +107,9 @@ test("header compacto, rutas SEO y preview no indexable", async ({ page }) => {
   expect(new URL(socialImage!).pathname).toBe("/media/proyecto-construccion-despues.webp");
   if (process.env.PLAYWRIGHT_EXPECTED_METADATA_ORIGIN) {
     expect(new URL(socialImage!).origin).toBe(process.env.PLAYWRIGHT_EXPECTED_METADATA_ORIGIN);
+    const image = await page.request.get(socialImage!);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toMatch(/^image\//);
   }
   const robots = await page.request.get("/robots.txt");
   expect(robots.status()).toBe(200);

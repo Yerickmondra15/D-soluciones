@@ -2,7 +2,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { approvedSiteUrl, metadataBaseUrl } from "../lib/site-url.ts";
 
-const keys = ["SITE_URL", "NETLIFY", "DEPLOY_PRIME_URL", "URL", "DEPLOY_URL"];
+const keys = ["SITE_URL", "NETLIFY", "CONTEXT", "DEPLOY_PRIME_URL", "URL", "DEPLOY_URL"];
 let saved;
 
 beforeEach(() => {
@@ -47,6 +47,15 @@ test("prioriza la URL de la rama o deploy preview de Netlify", () => {
   process.env.URL = "https://gds-demo.netlify.app";
   process.env.DEPLOY_PRIME_URL = "https://preview--gds-demo.netlify.app";
   assert.equal(metadataBaseUrl()?.href, "https://preview--gds-demo.netlify.app/");
+  assert.equal(approvedSiteUrl(), undefined);
+});
+
+test("produccion usa la URL publica aunque la rama conserve previews privados", () => {
+  process.env.NETLIFY = "true";
+  process.env.CONTEXT = "production";
+  process.env.URL = "https://gds-demo.netlify.app";
+  process.env.DEPLOY_PRIME_URL = "https://codex-rama--gds-demo.netlify.app";
+  assert.equal(metadataBaseUrl()?.href, "https://gds-demo.netlify.app/");
   assert.equal(approvedSiteUrl(), undefined);
 });
 

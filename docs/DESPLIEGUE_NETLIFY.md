@@ -26,7 +26,8 @@ Fecha: 27 de octubre de 2026, Costa Rica.
 - .netlify/ ignorado por Git. vercel.json se conserva como configuracion historica
   de otro proveedor y no configura este despliegue.
 - No se hace exportacion estatica ni se eliminan funciones para alojarlo.
-- OpenGraph usa DEPLOY_PRIME_URL, URL o DEPLOY_URL solo si NETLIFY=true;
+- OpenGraph usa URL cuando CONTEXT=production; en otros contextos prioriza
+  DEPLOY_PRIME_URL, con URL o DEPLOY_URL como fallback, solo si NETLIFY=true;
   el dominio aprobado SITE_URL prevalece cuando se configure en el futuro.
 - Indexacion, canonical y sitemap siguen dependiendo exclusivamente de SITE_URL.
 - No se incorporan base de datos, autenticacion del sitio, tienda ni pagos.
@@ -36,13 +37,29 @@ Fecha: 27 de octubre de 2026, Costa Rica.
 - npm ci: correcto, 366 paquetes desde lockfile.
 - npm run typecheck: correcto.
 - npm run lint: correcto.
-- npm run test:seo: 9 pruebas correctas, incluida separacion de OpenGraph y SEO.
+- npm run test:seo: 10 pruebas correctas, incluida separacion de OpenGraph y SEO.
 - npm run test:media: 3 pruebas correctas, manifiesto, EXIF y seis MP4 sin audio.
 - npm audit: 0 vulnerabilidades reportadas.
 - npm run build: correcto, paginas y metadatos estaticos; First Load JS de
   187 kB en / y 176 kB en /productos, sin cambios respecto a la base revisada.
 - La compilacion local simulo NETLIFY y URLs con hostname reservado .invalid;
   no representa un despliegue real. La verificacion remota sigue pendiente.
+
+## Primer despliegue y correccion
+
+El proyecto se creo inicialmente privado. El acceso anonimo devolvio 401 antes
+de publicar. Tras la confirmacion expresa del propietario, se eligio Make public
+para produccion; los deploy previews permanecen privados. Inicio, productos,
+robots y sitemap devolvieron 200 por HTTPS sin cookies ni sesion de Netlify.
+
+El primer build remoto uso Node.js 22.23.4, npm 10.9.9 y Next.js Runtime 5.16.3.
+Compilo correctamente el commit 3ab773f8e4ff5d6915c7a10ff5d7cded9e2fd259.
+La prueba remota encontro que OpenGraph tomaba la URL de rama de Netlify en
+vez de la URL principal publica. Se interrumpio la primera bateria para corregir
+el origen en produccion, agregar una regresion de contexto y comprobar tambien
+la descarga publica real de la imagen. Repetir QA tras el despliegue corregido.
+
+Netlify Free incorpora su distintivo flotante; no se altero el diseno de la app.
 
 Las pruebas SEO importan TypeScript con el soporte nativo de Node 22.18.0.
 Node puede mostrar una advertencia de deteccion de tipo de modulo durante esas

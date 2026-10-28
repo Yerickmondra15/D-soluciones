@@ -111,9 +111,11 @@ con `engines`. No se usa exportación estática ni se fija una versión del adap
 No hace falta `netlify.toml` para duplicar los ajustes detectados en el dashboard.
 `.netlify/` se mantiene fuera de Git.
 
-Mantener `SITE_URL` sin configurar en la demo. Las URLs de sistema `NETLIFY`,
-`DEPLOY_PRIME_URL`, `URL` y `DEPLOY_URL` resuelven OpenGraph pero no aprueban
-un dominio para SEO. No se necesitan claves de API, base de datos ni correo.
+Mantener `SITE_URL` sin configurar en la demo. Las variables de sistema `NETLIFY`,
+`CONTEXT`, `DEPLOY_PRIME_URL`, `URL` y `DEPLOY_URL` resuelven OpenGraph pero no
+aprueban un dominio para SEO. En producción se usa la URL principal pública,
+no la URL de rama que puede seguir privada. No se necesitan claves de API,
+base de datos ni correo.
 
 En Free el consumo tiene un límite de créditos: el servicio puede pausarse al
 agotarlos, sin contratar recargas. No activar planes, pruebas de pago, dominios,

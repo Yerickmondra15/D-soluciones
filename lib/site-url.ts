@@ -14,7 +14,9 @@ export function approvedSiteUrl(): URL | undefined {
 export function metadataBaseUrl(): URL | undefined {
   const approved = approvedSiteUrl();
   if (approved || process.env.NETLIFY !== "true") return approved;
+  const primary = httpsOrigin(process.env.URL);
+  if (process.env.CONTEXT === "production" && primary) return primary;
   return httpsOrigin(process.env.DEPLOY_PRIME_URL)
-    || httpsOrigin(process.env.URL)
+    || primary
     || httpsOrigin(process.env.DEPLOY_URL);
 }
