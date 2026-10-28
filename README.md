@@ -5,6 +5,9 @@ Rama de trabajo y publicación de la demo: `codex/gds-actualizacion-2026`.
 Alojamiento elegido: Netlify Free, sin dominio personalizado ni servicios de pago.
 Estado y comprobaciones en `docs/DESPLIEGUE_NETLIFY.md`. Vercel no está conectado.
 
+Demo pública: https://piscinas-gds.netlify.app (sin iniciar sesión, con noindex).
+Dashboard: https://app.netlify.com/projects/piscinas-gds/overview.
+
 ## Desarrollo local
 
 Requiere Node.js 22 LTS y npm.
